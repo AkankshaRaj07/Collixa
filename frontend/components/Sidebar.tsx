@@ -3,9 +3,10 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, MessageSquare, Users, User, Zap, Award } from 'lucide-react'
+import { LayoutDashboard, FileText, MessageSquare, Users, User, Zap, Award, Plus } from 'lucide-react'
 import { messageService, supabase } from '@/lib/supabase'
 import { useAuth } from '@/app/context/AuthContext'
+import { getLevelLabel } from '@/lib/utils'
 import ThemeToggle from './ThemeToggle'
 import CreditPurchaseModal from './CreditPurchaseModal'
 
@@ -92,21 +93,33 @@ export default function Sidebar() {
               <ThemeToggle />
             </div>
             
-            <div className="flex items-center gap-4 px-4 py-2 hover:bg-[var(--color-accent-soft)]/10 rounded-2xl transition-all duration-300">
-               <div className="w-10 h-10 rounded-full bg-[var(--color-accent-soft)] flex items-center justify-center text-[var(--color-accent)] font-serif font-black shadow-inner">
-                  <Zap size={18} fill="currentColor" className="opacity-80" />
-               </div>
-               <div className="flex-1">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-primary)] leading-tight">
-                    Balance = {user?.credits || 0}
-                 </p>
-                 <button 
-                   onClick={() => setIsCreditModalOpen(true)}
-                   className="text-[8px] font-black text-[var(--color-accent)] uppercase tracking-tighter hover:tracking-widest transition-all duration-300 block mt-1"
-                 >
-                   Get more credit →
-                 </button>
-               </div>
+            <div className="bg-[var(--color-bg-primary)]/40 border border-[var(--color-border)] rounded-2xl p-3.5 shadow-sm hover:shadow-md transition-all duration-300 group">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-[var(--color-accent)] flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-[var(--color-accent)]/20 shrink-0">
+                    {user?.level || 1}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[7px] font-black uppercase tracking-[0.2em] text-[var(--color-accent)] opacity-80 leading-none mb-1">Rank</span>
+                    <span className="text-[11px] font-serif font-black text-[var(--color-text-primary)] italic leading-none truncate max-w-[80px]">{getLevelLabel(user?.level)}</span>
+                  </div>
+                </div>
+                
+                <div className="h-8 w-[1px] bg-[var(--color-border)] opacity-30" />
+
+                <div className="flex-1 flex flex-col items-end">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Zap size={11} className="text-[var(--color-accent)]" fill="currentColor" />
+                    <span className="text-[15px] font-serif font-black text-[var(--color-text-primary)] leading-none">{user?.credits || 0}</span>
+                  </div>
+                  <button 
+                    onClick={() => setIsCreditModalOpen(true)}
+                    className="text-[7px] font-black text-[var(--color-accent)] uppercase tracking-tighter hover:tracking-widest transition-all duration-300 leading-none"
+                  >
+                    Top up →
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

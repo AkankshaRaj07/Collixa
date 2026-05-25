@@ -25,8 +25,7 @@ export default function AdminReports() {
           </div>
           <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">Reports Feature</h3>
           <p className="text-[var(--color-text-secondary)] max-w-md mx-auto mb-6">
-            This section will display user reports, flagged content, and moderation requests. 
-            Extend this page as needed based on your reporting system.
+            This section is designed to display user reports, flagged content, and moderation requests once the system is live.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
@@ -48,23 +47,11 @@ export default function AdminReports() {
           </div>
         </div>
 
-        {/* Instructions */}
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6">
-          <div className="flex items-start gap-3">
-            <CheckCircle size={20} className="text-blue-500 mt-0.5" />
-            <div>
-              <h4 className="font-bold text-[var(--color-text-primary)] mb-1">Implementation Notes</h4>
-              <p className="text-sm text-[var(--color-text-secondary)]">
-                To enable the reports system, you would need to:
-              </p>
-              <ul className="text-sm text-[var(--color-text-secondary)] mt-2 space-y-1 list-disc list-inside">
-                <li>Create a reports table in your database</li>
-                <li>Add report buttons to intents, users, and messages</li>
-                <li>Implement report submission API endpoints</li>
-                <li>Connect this page to fetch and manage reports</li>
-              </ul>
-            </div>
-          </div>
+        {/* Future implementation note */}
+        <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl p-8 text-center italic">
+          <p className="text-[var(--color-text-secondary)] text-sm">
+            This module is reserved for future implementation of the reporting and moderation system.
+          </p>
         </div>
       </div>
     </AdminLayout>

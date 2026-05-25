@@ -46,3 +46,4 @@ services:
         value: "--max-old-space-size=400"
       - key: NODE_VERSION
         value: "20"
+  # ─── COLLIXA (Next.js) ───

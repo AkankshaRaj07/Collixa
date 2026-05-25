@@ -12,7 +12,9 @@ export class AIService {
     
     if (config.GEMINI_API_KEY) {
       this.genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
-      this.model = this.genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      this.model = this.genAI.getGenerativeModel({ 
+        model: "gemini-flash-latest"
+      });
     } else {
       console.warn('⚠️  GEMINI_API_KEY not found in configuration. AI features will be disabled.');
     }
@@ -82,7 +84,12 @@ export class AIService {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
-      const jsonStr = text.match(/\{[\s\S]*\}/)?.[0] || text;
+      
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      if (start === -1 || end === -1) throw new Error('No JSON object found in AI response');
+      
+      const jsonStr = text.substring(start, end + 1);
       return JSON.parse(jsonStr);
     } catch (error) {
       if (error.message?.includes('429') || error.status === 429) {
@@ -128,46 +135,60 @@ export class AIService {
     ];
 
     if (!this.isConfigured()) {
-      return fallbackRoadmap;
+      return { steps: fallbackRoadmap, isFallback: true };
     }
 
-    const prompt = `
-      You are an expert technical mentor and project architect.
-      Create a highly personalized, concrete, and actionable 5-step learning roadmap for ${user.name} to achieve their specific goal: "${goal}".
-      
-      USER CONTEXT:
-      - Current Skills: ${JSON.stringify(user.skills || [])}
-      - Target Goal: "${goal}"
+      const prompt = `
+        You are an expert technical mentor and project architect for the Collixa platform.
+        Create a personalized 5-step implementation roadmap for a user to achieve this goal: "${goal}".
+        
+        CONTEXT:
+        - User current skills: ${JSON.stringify(user.skills || [])}
+        - Goal to achieve: "${goal}"
 
-      INSTRUCTIONS:
-      1. Tailor every step specifically to achieving "${goal}".
-      2. Each step must be a logical progression from the previous one.
-      3. The "description" should explain exactly what specific tools, concepts, or sub-tasks are involved for this goal.
-      4. "resources" should be a list of 3-4 specific technical topics or libraries relevant to this roadmap.
-      5. Do NOT be generic. Be opinionated and technical.
+        REQUIRED OUTPUT FORMAT:
+        Return ONLY a JSON array of exactly 5 objects. Each object MUST have:
+        1. "step": A short, catchy title (e.g., "Foundational Setup")
+        2. "description": A detailed explanation (2-3 sentences) of what to do.
+        3. "duration": Estimated time (e.g., "2 Days", "1 Week")
+        4. "resources": An array of 3 specific technical topics to study.
 
-      Return a JSON array of 5 objects:
-      - step: Descriptive title
-      - description: Detailed "how-to" for this step
-      - duration: Practical time estimate
-      - resources: Array of strings
-      
-      IMPORTANT: Return ONLY the JSON array. No markdown code blocks, no preamble, just the raw JSON.
-    `;
+        CRITICAL: 
+        - Tailor the steps to the specific goal of "${goal}".
+        - Be technical and professional.
+        - Output ONLY the raw JSON array. No markdown code blocks, no preamble.
+      `;
 
     try {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
-      const text = response.text();
-      // Improved JSON extraction for markdown arrays
-      const jsonStr = text.match(/\[[\s\S]*\]/)?.[0] || text;
+      const text = response.text() || "";
+      
+      if (!text) {
+        throw new Error('AI returned an empty response');
+      }
+
+      // Improved JSON extraction: find the first '[' and last ']'
+      const start = text.indexOf('[');
+      const end = text.lastIndexOf(']');
+      
+      if (start === -1 || end === -1) {
+        throw new Error('AI returned malformed roadmap (no array found)');
+      }
+      
+      const jsonStr = text.substring(start, end + 1);
       const steps = JSON.parse(jsonStr);
+      
+      if (!Array.isArray(steps) || steps.length === 0) {
+        throw new Error('AI returned empty or invalid roadmap array');
+      }
+
       return { steps, isFallback: false };
     } catch (error) {
       if (error.message?.includes('429') || error.status === 429) {
-        console.warn('[AIService] Roadmap Error: Quota Exceeded (429). Returning static template.');
+        console.warn('[AIService] Roadmap Quota Exceeded (429). Falling back.');
       } else {
-        console.warn('[AIService] Roadmap Error (Falling back to static template):', error);
+        console.warn('[AIService] Roadmap Generation Error:', error.message);
       }
       return { steps: fallbackRoadmap, isFallback: true };
     }

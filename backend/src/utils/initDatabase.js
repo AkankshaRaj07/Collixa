@@ -97,7 +97,7 @@ export const initializeDatabase = async () => {
       ALTER TABLE credit_transactions ALTER COLUMN type TYPE VARCHAR(20);
       ALTER TABLE credit_transactions ADD COLUMN IF NOT EXISTS description TEXT;
       ALTER TABLE credit_transactions DROP CONSTRAINT IF EXISTS credit_transactions_type_check;
-      ALTER TABLE credit_transactions ADD CONSTRAINT credit_transactions_type_check CHECK (type IN ('EARN', 'SPEND', 'PURCHASE', 'TRANSFER', 'ACHIEVEMENT', 'ADMIN_ADD', 'ADMIN_DEDUCT', 'FEE'));
+      ALTER TABLE credit_transactions ADD CONSTRAINT credit_transactions_type_check CHECK (type IN ('EARN', 'SPEND', 'PURCHASE', 'TRANSFER', 'ACHIEVEMENT', 'ADMIN_ADD', 'ADMIN_DEDUCT', 'FEE', 'BONUS', 'REDEMPTION'));
       ALTER TABLE credit_transactions ALTER COLUMN session_id DROP NOT NULL;
 
       CREATE INDEX IF NOT EXISTS idx_credit_transactions_user_id ON credit_transactions(user_id);

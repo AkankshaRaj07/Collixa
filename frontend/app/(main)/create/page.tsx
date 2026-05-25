@@ -288,7 +288,7 @@ function CreateIntentContent() {
                    </div>
 
                    <div className="space-y-4 max-w-md mx-auto">
-                     <h3 className="text-2xl md:text-3xl font-serif font-black tracking-tight">Transmission Received.</h3>
+                     <h3 className="text-2xl md:text-3xl font-serif font-black tracking-tight">Message Received.</h3>
                      <div className="space-y-1">
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-accent)]">Verification in Progress</p>
                         <p className="text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">

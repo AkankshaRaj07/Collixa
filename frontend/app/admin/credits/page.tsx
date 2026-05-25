@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import AdminLayout from '@/components/AdminLayout'
-import { Coins, Plus, Minus, Search, ArrowRight, CheckCircle2 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Coins, Plus, Minus, Search, ArrowRight, CheckCircle2, X, ChevronDown, User, Loader2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/app/context/AuthContext'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
@@ -30,10 +30,13 @@ export default function AdminCredits() {
   const [creditAmount, setCreditAmount] = useState(10)
   const [creditReason, setCreditReason] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showDeductModal, setShowDeductModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [lastTransaction, setLastTransaction] = useState<any>(null)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [userSearchQuery, setUserSearchQuery] = useState('')
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
   const { refreshUser } = useAuth()
   
   const formatDescription = (tx: CreditTransaction) => {
@@ -128,7 +131,8 @@ export default function AdminCredits() {
         setLastTransaction({
           amount: creditAmount,
           userName: user?.name || 'User',
-          reason: creditReason
+          reason: creditReason,
+          type: 'ADD'
         })
         
         setShowAddModal(false)
@@ -153,6 +157,58 @@ export default function AdminCredits() {
     }
   }
 
+  const deductCredits = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setFormError(null)
+
+    try {
+      const response = await fetch(`${API_URL}/api/admin/credits/deduct`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          userId: selectedUser,
+          amount: creditAmount,
+          reason: creditReason
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        const user = users.find(u => u.id === selectedUser)
+        
+        setLastTransaction({
+          amount: creditAmount,
+          userName: user?.name || 'User',
+          reason: creditReason,
+          type: 'DEDUCT'
+        })
+        
+        setShowDeductModal(false)
+        setSelectedUser('')
+        setCreditAmount(10)
+        setCreditReason('')
+        setShowSuccessModal(true)
+        
+        setTimeout(() => {
+          fetchData()
+          refreshUser()
+        }, 300)
+      } else {
+        setFormError(data.error || data.message || 'Failed to deduct credits')
+      }
+    } catch (error) {
+      console.error('Error deducting credits:', error)
+      setFormError('An unexpected error occurred. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   useEffect(() => {
     fetchData()
   }, [])
@@ -161,6 +217,13 @@ export default function AdminCredits() {
     t.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.type?.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  const filteredUsers = users.filter(user => 
+    user.name?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+    user.email?.toLowerCase().includes(userSearchQuery.toLowerCase())
+  )
+
+  const selectedUserData = users.find(u => u.id === selectedUser)
 
   if (loading) {
     return (
@@ -182,13 +245,30 @@ export default function AdminCredits() {
             <h2 className="text-2xl font-serif font-black text-[var(--color-text-primary)]">Credit Management</h2>
             <p className="text-[var(--color-text-secondary)] text-sm">Manage user credits and view transactions</p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--color-accent)]/80 transition-all"
-          >
-            <Plus size={16} />
-            Add Credits
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setSelectedUser('')
+                setUserSearchQuery('')
+                setShowDeductModal(true)
+              }}
+              className="flex items-center gap-2 px-4 py-2 border border-red-500/30 text-red-500 rounded-xl text-sm font-bold hover:bg-red-500/5 transition-all"
+            >
+              <Minus size={16} />
+              Deduct Credits
+            </button>
+            <button
+              onClick={() => {
+                setSelectedUser('')
+                setUserSearchQuery('')
+                setShowAddModal(true)
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--color-accent)]/80 transition-all"
+            >
+              <Plus size={16} />
+              Add Credits
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -290,111 +370,376 @@ export default function AdminCredits() {
         </div>
 
         {/* Add Credits Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 max-w-md w-full mx-4">
-              <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4">Add Credits</h3>
-              <form onSubmit={addCredits} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">Select User</label>
-                  <select
-                    value={selectedUser}
-                    onChange={(e) => setSelectedUser(e.target.value)}
-                    className="w-full px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl text-sm focus:ring-1 focus:ring-[var(--color-accent)]"
-                    required
-                  >
-                    <option value="">Select a user...</option>
-                    {users.map(user => (
-                      <option key={user.id} value={user.id}>
-                        {user.name} ({user.email}) - {user.credits || 0} credits
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">Amount</label>
-                  <input
-                    type="number"
-                    value={creditAmount}
-                    onChange={(e) => setCreditAmount(parseInt(e.target.value))}
-                    min="1"
-                    className="w-full px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl text-sm focus:ring-1 focus:ring-[var(--color-accent)]"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">Reason</label>
-                  <input
-                    type="text"
-                    value={creditReason}
-                    onChange={(e) => setCreditReason(e.target.value)}
-                    placeholder="e.g., Bonus, Refund, etc."
-                    className="w-full px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl text-sm focus:ring-1 focus:ring-[var(--color-accent)]"
-                    required
-                  />
-                </div>
-                {formError && (
-                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
-                    <p className="text-xs text-red-500 text-center">{formError}</p>
+        <AnimatePresence>
+          {showAddModal && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={() => setIsUserDropdownOpen(false)}>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-[2.5rem] p-8 max-w-md w-full relative overflow-hidden shadow-2xl"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-accent)] to-transparent opacity-50" />
+                
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <span className="text-[8px] font-black uppercase tracking-[0.5em] text-[var(--color-accent)] block italic mb-1">Administration</span>
+                    <h3 className="text-3xl font-serif font-black tracking-tighter italic text-[var(--color-text-primary)]">Add Credits.</h3>
                   </div>
-                )}
-                <div className="flex gap-3 justify-end pt-4">
-                  <button
-                    type="button"
+                  <button 
                     onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/5 rounded-lg transition-all"
+                    className="w-10 h-10 rounded-full border border-[var(--color-border)] flex items-center justify-center hover:bg-[var(--color-bg-primary)] transition-all bg-[var(--color-bg-primary)]/50"
                   >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="px-6 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]/80 active:scale-95 disabled:opacity-50 disabled:active:scale-100 transition-all font-bold flex items-center gap-2"
-                  >
-                    {submitting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      'Add Credits'
-                    )}
+                    <X size={18} />
                   </button>
                 </div>
-              </form>
+
+                <form onSubmit={addCredits} className="space-y-6">
+                  <div className="space-y-2 relative">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] ml-2">Select Recipient</label>
+                    <div className="relative">
+                      <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" size={16} />
+                        <input
+                          type="text"
+                          value={selectedUserData ? `${selectedUserData.name} (${selectedUserData.email})` : userSearchQuery}
+                          onChange={(e) => {
+                            setUserSearchQuery(e.target.value)
+                            if (selectedUser) setSelectedUser('')
+                            setIsUserDropdownOpen(true)
+                          }}
+                          onFocus={() => setIsUserDropdownOpen(true)}
+                          placeholder="Search by name or email..."
+                          className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl pl-12 pr-10 py-4 text-xs font-bold focus:border-[var(--color-accent)] outline-none transition-all"
+                          required={!selectedUser}
+                        />
+                        {selectedUser && (
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setSelectedUser('')
+                              setUserSearchQuery('')
+                            }}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-red-500 transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                        {!selectedUser && (
+                           <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] transition-transform duration-300 ${isUserDropdownOpen ? 'rotate-180' : ''}`} size={16} />
+                        )}
+                      </div>
+
+                      <AnimatePresence>
+                        {isUserDropdownOpen && !selectedUser && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl shadow-2xl overflow-hidden z-[110] max-h-60 overflow-y-auto"
+                          >
+                            {filteredUsers.length > 0 ? (
+                              filteredUsers.map(user => (
+                                <button
+                                  key={user.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedUser(user.id)
+                                    setIsUserDropdownOpen(false)
+                                    setUserSearchQuery('')
+                                  }}
+                                  className="w-full p-4 flex items-center gap-3 hover:bg-[var(--color-bg-primary)] transition-colors text-left border-b border-[var(--color-border)] last:border-0"
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-[var(--color-accent)]/10 text-[var(--color-accent)] flex items-center justify-center font-black text-xs">
+                                    {user.name?.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[11px] font-black text-[var(--color-text-primary)] truncate">{user.name}</p>
+                                    <p className="text-[8px] font-medium text-[var(--color-text-secondary)] truncate uppercase tracking-widest">{user.email}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-[10px] font-serif font-black text-[var(--color-accent)]">{user.credits || 0}</p>
+                                    <p className="text-[7px] font-black uppercase text-[var(--color-text-secondary)] opacity-50">Creds</p>
+                                  </div>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="p-8 text-center">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-secondary)]">No users found</p>
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] ml-2">Allocation Amount</label>
+                    <div className="relative group">
+                        <Coins className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-accent)]" size={16} />
+                        <input
+                        type="number"
+                        value={creditAmount}
+                        onChange={(e) => setCreditAmount(parseInt(e.target.value))}
+                        min="1"
+                        placeholder="0"
+                        className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl pl-12 pr-5 py-4 text-sm font-mono font-bold focus:border-[var(--color-accent)] outline-none transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] ml-2">Protocol Note / Reason</label>
+                    <input
+                      type="text"
+                      value={creditReason}
+                      onChange={(e) => setCreditReason(e.target.value)}
+                      placeholder="e.g., Bonus, Correction, etc."
+                      className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl px-5 py-4 text-xs font-bold focus:border-[var(--color-accent)] outline-none transition-all"
+                      required
+                    />
+                  </div>
+
+                  {formError && (
+                    <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-red-500 text-center w-full">{formError}</p>
+                    </div>
+                  )}
+
+                  <div className="pt-4">
+                    <button
+                      type="submit"
+                      disabled={submitting || !selectedUser}
+                      className="w-full py-5 bg-[var(--color-inverse-bg)] text-[var(--color-inverse-text)] rounded-3xl text-[9px] font-black uppercase tracking-[0.5em] hover:bg-[var(--color-accent)] transition-all shadow-xl shadow-black/10 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 group"
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          Execute Addition
+                          <Plus size={14} className="group-hover:scale-125 transition-transform" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
+
+        {/* Deduct Credits Modal */}
+        <AnimatePresence>
+          {showDeductModal && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={() => setIsUserDropdownOpen(false)}>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-[var(--color-bg-secondary)] border border-red-500/20 rounded-[2.5rem] p-8 max-w-md w-full relative overflow-hidden shadow-2xl"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-transparent opacity-50" />
+                
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <span className="text-[8px] font-black uppercase tracking-[0.5em] text-red-500 block italic mb-1">Administrative Correction</span>
+                    <h3 className="text-3xl font-serif font-black tracking-tighter italic text-[var(--color-text-primary)]">Deduct.</h3>
+                  </div>
+                  <button 
+                    onClick={() => setShowDeductModal(false)}
+                    className="w-10 h-10 rounded-full border border-[var(--color-border)] flex items-center justify-center hover:bg-[var(--color-bg-primary)] transition-all bg-[var(--color-bg-primary)]/50"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <form onSubmit={deductCredits} className="space-y-6">
+                  <div className="space-y-2 relative">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] ml-2">Select User</label>
+                    <div className="relative">
+                      <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" size={16} />
+                        <input
+                          type="text"
+                          value={selectedUserData ? `${selectedUserData.name} (${selectedUserData.email})` : userSearchQuery}
+                          onChange={(e) => {
+                            setUserSearchQuery(e.target.value)
+                            if (selectedUser) setSelectedUser('')
+                            setIsUserDropdownOpen(true)
+                          }}
+                          onFocus={() => setIsUserDropdownOpen(true)}
+                          placeholder="Search by name or email..."
+                          className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl pl-12 pr-10 py-4 text-xs font-bold focus:border-red-500 outline-none transition-all"
+                          required={!selectedUser}
+                        />
+                        {selectedUser && (
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setSelectedUser('')
+                              setUserSearchQuery('')
+                            }}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-red-500 transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                        {!selectedUser && (
+                           <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] transition-transform duration-300 ${isUserDropdownOpen ? 'rotate-180' : ''}`} size={16} />
+                        )}
+                      </div>
+
+                      <AnimatePresence>
+                        {isUserDropdownOpen && !selectedUser && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl shadow-2xl overflow-hidden z-[110] max-h-60 overflow-y-auto"
+                          >
+                            {filteredUsers.length > 0 ? (
+                              filteredUsers.map(user => (
+                                <button
+                                  key={user.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedUser(user.id)
+                                    setIsUserDropdownOpen(false)
+                                    setUserSearchQuery('')
+                                  }}
+                                  className="w-full p-4 flex items-center gap-3 hover:bg-[var(--color-bg-primary)] transition-colors text-left border-b border-[var(--color-border)] last:border-0"
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center font-black text-xs">
+                                    {user.name?.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[11px] font-black text-[var(--color-text-primary)] truncate">{user.name}</p>
+                                    <p className="text-[8px] font-medium text-[var(--color-text-secondary)] truncate uppercase tracking-widest">{user.email}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-[10px] font-serif font-black text-red-500">{user.credits || 0}</p>
+                                    <p className="text-[7px] font-black uppercase text-[var(--color-text-secondary)] opacity-50">Creds</p>
+                                  </div>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="p-8 text-center">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-secondary)]">No users found</p>
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] ml-2">Deduction Amount</label>
+                    <div className="relative group">
+                        <Coins className="absolute left-4 top-1/2 -translate-y-1/2 text-red-500" size={16} />
+                        <input
+                        type="number"
+                        value={creditAmount}
+                        onChange={(e) => setCreditAmount(parseInt(e.target.value))}
+                        min="1"
+                        placeholder="0"
+                        className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl pl-12 pr-5 py-4 text-sm font-mono font-bold focus:border-red-500 outline-none transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] ml-2">Deduction Reason</label>
+                    <input
+                      type="text"
+                      value={creditReason}
+                      onChange={(e) => setCreditReason(e.target.value)}
+                      placeholder="e.g., Penalty, Correction, etc."
+                      className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl px-5 py-4 text-xs font-bold focus:border-red-500 outline-none transition-all"
+                      required
+                    />
+                  </div>
+
+                  {formError && (
+                    <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-red-500 text-center w-full">{formError}</p>
+                    </div>
+                  )}
+
+                  <div className="pt-4">
+                    <button
+                      type="submit"
+                      disabled={submitting || !selectedUser}
+                      className="w-full py-5 bg-red-500 text-white rounded-3xl text-[9px] font-black uppercase tracking-[0.5em] hover:bg-red-600 transition-all shadow-xl shadow-red-500/20 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 group"
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          Execute Deduction
+                          <Minus size={14} className="group-hover:scale-125 transition-transform" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Success Modal */}
-        {showSuccessModal && lastTransaction && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl"
-            >
-              <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="text-green-500 w-10 h-10" />
-              </div>
-              <h3 className="text-2xl font-serif font-black mb-2 italic">Success!</h3>
-              <p className="text-[var(--color-text-secondary)] text-sm mb-6">
-                Successfully added <span className="text-[var(--color-text-primary)] font-bold">{lastTransaction.amount} credits</span> to <br />
-                <span className="text-[var(--color-accent)] font-bold">{lastTransaction.userName}</span>
-              </p>
-              <div className="bg-[var(--color-bg-primary)] rounded-xl p-4 mb-8 text-left border border-[var(--color-border)]">
-                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] mb-1">Reason</p>
-                <p className="text-xs font-medium text-[var(--color-text-primary)]">{lastTransaction.reason}</p>
-              </div>
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full py-3 bg-[var(--color-inverse-bg)] text-[var(--color-inverse-text)] rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[var(--color-accent)] transition-all active:scale-95"
+        <AnimatePresence>
+          {showSuccessModal && lastTransaction && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl relative overflow-hidden"
               >
-                Continue
-              </button>
-            </motion.div>
-          </div>
-        )}
+                <div className={`absolute top-0 left-0 w-full h-1 ${lastTransaction.type === 'ADD' ? 'bg-green-500' : 'bg-red-500'} opacity-30`} />
+                
+                <div className={`w-24 h-24 ${lastTransaction.type === 'ADD' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner`}>
+                  <CheckCircle2 className="w-12 h-12" />
+                </div>
+
+                <h3 className="text-3xl font-serif font-black mb-3 italic tracking-tighter text-[var(--color-text-primary)]">Authorized.</h3>
+                
+                <div className="space-y-1 mb-8">
+                  <p className="text-[var(--color-text-secondary)] text-[10px] font-black uppercase tracking-widest">Transaction Success</p>
+                  <p className="text-[var(--color-text-primary)] text-sm font-medium">
+                    {lastTransaction.type === 'ADD' ? 'Credited' : 'Deducted'} <span className="font-serif font-black italic">{lastTransaction.amount}</span> {lastTransaction.type === 'ADD' ? 'to' : 'from'} <br />
+                    <span className="text-[var(--color-accent)] font-bold">{lastTransaction.userName}</span>
+                  </p>
+                </div>
+
+                <div className="bg-[var(--color-bg-primary)]/50 backdrop-blur-sm rounded-2xl p-5 mb-10 text-left border border-[var(--color-border)]">
+                  <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--color-text-secondary)] mb-2 opacity-50">Ledger Entry Reason</p>
+                  <p className="text-[11px] font-bold text-[var(--color-text-primary)] leading-relaxed italic">"{lastTransaction.reason}"</p>
+                </div>
+
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full py-5 bg-[var(--color-inverse-bg)] text-[var(--color-inverse-text)] rounded-3xl text-[9px] font-black uppercase tracking-[0.5em] hover:bg-[var(--color-accent)] transition-all active:scale-95 shadow-xl shadow-black/10"
+                >
+                  Continue
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </AdminLayout>
   )

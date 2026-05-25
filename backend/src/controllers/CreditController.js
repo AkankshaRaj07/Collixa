@@ -32,7 +32,23 @@ export class CreditController {
   static async getMyTransactions(req, res, next) {
     try {
       const transactions = await CreditService.getMyTransactions(req.user.id);
-      res.status(200).json({ success: true, data: transactions });
+      
+      // Process transactions to show REDEEM instead of SPEND for voucher exchanges
+      const processedTransactions = transactions.map(tx => {
+        if (tx.type === 'SPEND' && tx.description) {
+          try {
+            const meta = typeof tx.description === 'string' ? JSON.parse(tx.description) : tx.description;
+            if (meta && meta.isRedemption) {
+              return { ...tx, type: 'REDEEM' };
+            }
+          } catch (e) {
+            // Ignore parsing errors
+          }
+        }
+        return tx;
+      });
+
+      res.status(200).json({ success: true, data: processedTransactions });
     } catch (error) {
       next(error);
     }

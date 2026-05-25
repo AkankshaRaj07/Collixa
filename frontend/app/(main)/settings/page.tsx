@@ -203,7 +203,7 @@ export default function SettingsPage() {
                   <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-[var(--color-accent)] mb-10 text-center md:text-left">Signal Configuration</h2>
                   <div className="space-y-6">
                     {[
-                      { id: 'emailNotifications', label: 'Direct Transmissions', desc: 'Get updates on messages and applications' },
+                      { id: 'emailNotifications', label: 'Direct Messages', desc: 'Get updates on messages and applications' },
                       { id: 'pushNotifications', label: 'Ecosystem Alerts', desc: 'Real-time signals from the network' },
                       { id: 'weeklyDigest', label: 'Weekly Debrief', desc: 'Condensed summary of your weekly impact' },
                     ].map((item) => (

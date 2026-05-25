@@ -1,7 +1,14 @@
 # <img src="frontend/public/hero.png" width="48" height="48" alt="Collixa Logo" align="center"> Collixa - Intent-Based Collaboration Marketplace
 
+![Collixa Banner](https://img.shields.io/badge/Status-Active-brightgreen)
+![Next.js](https://img.shields.io/badge/Frontend-Next.js%2014-black?logo=next.js)
+![Express](https://img.shields.io/badge/Backend-Express.js-gray?logo=express)
+![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue?logo=postgresql)
+![Tailwind](https://img.shields.io/badge/Styling-Tailwind%20CSS-38B2AC?logo=tailwind-css)
+![AI](https://img.shields.io/badge/AI-Gemini%20Flash-orange)
+
 ### 📌 Overview
-**Collixa** is a premium, full-stack collaboration platform designed to bridge the gap between vision and execution. It allows users to manifest "Intents" (projects), build "Tribes" (teams), and discover world-class talent through an AI-enhanced matching engine.
+**Collixa** is a premium, full-stack intent-based collaboration platform designed to bridge the gap between vision and execution. Leveraging AI-driven matchmaking and a robust credit-based "Wealth Protocol," it allows users to manifest "Intents" (projects), build "Tribes" (teams), and discover world-class talent.
 
 #### Project Objectives
 - **Intent Manifestation:** Precisely define and broadcast project visions and budgets.
@@ -13,34 +20,33 @@
 
 ---
 
+### ✨ Key Features
+
+| Module | Capability | Tech Used |
+| :--- | :--- | :--- |
+| **Intent Marketplace** | Post project visions, budgets, and timelines. | Next.js + Express |
+| **Tribe Architecture** | Form high-performance squads based on shared goals. | PostgreSQL + Express |
+| **AI Matching Engine** | Intelligent collaborator suggestions using Google Gemini. | Google Gemini Flash AI |
+| **Wealth Protocol** | Credit wallet, Voucher vault, and Secure Stripe payments. | Stripe API + PostgreSQL |
+| **Skill Hub** | Discovery and exchange of professional skills. | Lucide + Express |
+| **Real-time Hub** | Integrated chat, video meetings (Jitsi), and presence. | Socket.io + React + Jitsi |
+| **Admin Control Center**| Granular control over users, credits, and system health. | Next.js + Express |
+
+---
+
 ### 🏗️ Architecture & Core Tech Stack
 Collixa is logically split into two service layers, with a modern, high-performance stack for resilience and speed.
 
 | Layer | Primary Technology | Description |
 | :--- | :--- | :--- |
 | **Frontend** | React + Next.js 14 | Component-based UI with App Router for fast, dynamic rendering. |
-| **Styling & UI** | Tailwind CSS + Framer Motion + Shadcn/UI | Modern, minimalist design with smooth micro-animations. |
-| **Icons** | Lucide-React | Clean, consistent SVG icons. |
+| **Styling & UI** | Tailwind CSS + Framer Motion | Modern, minimalist design with smooth micro-animations. |
 | **Backend** | Node.js + Express | Highly scalable server-side environment for API routing and services. |
 | **Database** | Supabase (PostgreSQL) | Serverless relational database for persistent data storage. |
-| **Storage** | Supabase Storage | File storage for project media and user attachments. |
-| **AI/ML** | Google Gemini | Core LLM for intent analysis, matching, and content suggestions. |
+| **Storage** | Supabase Storage / Multer | File storage for project media and user attachments. |
+| **AI/ML** | Google Gemini Flash AI | Core LLM for intent analysis, matching, and content suggestions. |
 | **Auth** | JWT + Bcryptjs | Secure, session-based authentication and role-based access control. |
-| **Communication**| Nodemailer / Socket.io / Jitsi Meet | Email notifications, real-time chat, and integrated virtual meetings. |
-
----
-
-### ✨ Platform Features
-Collixa provides specialized modules for every stage of project collaboration:
-
-| Module | Capability | Tech Used |
-| :--- | :--- | :--- |
-| **Intent Marketplace** | Post project visions, budgets, and timelines. | Next.js + Express |
-| **Tribe Collaboration** | Form and manage specialized teams for project execution. | PostgreSQL + Express |
-| **AI Matching Engine** | Intelligent collaborator suggestions based on intent goals. | Google Gemini |
-| **Skill Hub** | Discovery and exchange of professional skills. | Lucide + Express |
-| **Real-time Hub** | Integrated chat, video meetings (Jitsi), and presence indicators. | Socket.io + React + Jitsi |
-| **Gamification** | Track XP, achievements, and project milestones. | PostgreSQL |
+| **Communication**| Nodemailer / Socket.io / Jitsi | Email notifications, real-time chat, and integrated virtual meetings. |
 
 ---
 
@@ -58,12 +64,6 @@ Collixa provides specialized modules for every stage of project collaboration:
 2. Backend middleware validates the token using `JWT_SECRET`.
 3. If valid, user context is attached to the request (`req.user`).
 4. Route handler processes the request using the attached context.
-
-#### Password Reset Flow
-1. User requests OTP via `/api/auth/forgot-password`.
-2. 6-digit OTP is generated and stored in the database with a 5-minute expiry.
-3. User submits the OTP and a new password to `/api/auth/reset-password`.
-4. OTP is validated; password is hashed and updated; OTP is cleared.
 
 ---
 
@@ -99,16 +99,13 @@ CREATE TABLE users (
 | `/api/auth/register` | `POST` | Register a new user |
 | `/api/auth/login` | `POST` | Authenticate user and return JWT |
 | `/api/auth/forgot-password` | `POST` | Request password reset OTP |
-| `/api/auth/reset-password` | `POST` | Reset password using OTP |
 | `/api/intents/search/:keyword` | `GET` | Search public intents |
-| `/api/stats` | `GET` | Get platform statistics |
 
 #### Protected Routes (Requires JWT)
 | Endpoint | Method | Description |
 | :--- | :--- | :--- |
 | `/api/auth/verify` | `GET` | Verify token validity |
 | `/api/auth/profile` | `GET/PUT` | Get or update user profile |
-| `/api/auth/change-password` | `POST` | Change user password |
 | `/api/intents` | `GET/POST` | Fetch or create an intent |
 | `/api/intents/:id/request` | `POST` | Send request to join an intent |
 | `/api/skills` | `GET/POST` | Browse or add professional skills |
@@ -121,7 +118,7 @@ CREATE TABLE users (
 #### 1. Clone the Repository
 ```bash
 git clone https://github.com/AkankshaRaj07/Collixa.git
-cd collixa
+cd Collixa
 ```
 
 #### 2. Configure Environment Variables
@@ -135,6 +132,7 @@ Create `.env` files in both `frontend/` and `backend/` directories.
 | `JWT_SECRET` | Secure string for token generation |
 | `FRONTEND_URL` | Frontend URL (default: `http://localhost:3001`) |
 | `GEMINI_API_KEY` | Google AI Studio API Key |
+| `STRIPE_SECRET_KEY` | Stripe Payment Gateway Key |
 
 **Frontend (`frontend/.env.local`):**
 | Variable | Description |
@@ -149,7 +147,6 @@ cd backend
 npm install
 npm run dev
 ```
-*Server will start on `http://localhost:5000`*
 
 **Frontend Setup:**
 ```bash
@@ -157,12 +154,19 @@ cd frontend
 npm install
 npm run dev
 ```
-*The application will be available at `http://localhost:3001`*
+
+---
+
+### 🎨 Design Philosophy
+Collixa features a **premium, modern UI** built for high-end user experiences. The interface emphasizes:
+- **Glassmorphism**: Subtle transparency and blurred backgrounds.
+- **Micro-interactions**: Fluid transitions using Framer Motion.
+- **Responsive Design**: Fully optimized for mobile, tablet, and desktop.
+- **Aesthetic Harmony**: A curated color palette balancing professional productivity with flair.
 
 ---
 
 ### 📄 License & Acknowledgements
-This project is licensed under the MIT License.
+Distributed under the **MIT License**.
 
-**Powered by:**
-⚡ **Next.js** | 🚀 **Express** | 🧠 **Google Gemini** | 💾 **Supabase** | 🎨 **Tailwind CSS** | 🎥 **Jitsi** | 💳 **Stripe**
+Built with ❤️ by the Collixa Team.

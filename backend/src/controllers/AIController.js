@@ -156,11 +156,13 @@ export class AIController {
   static async generateLearningPath(req, res, next) {
     try {
       const userId = req.user.id;
-      const { goal } = req.body;
+      let { goal } = req.body;
       
-      if (!goal) {
-        return res.status(400).json({ error: 'Goal is required' });
+      if (!goal || typeof goal !== 'string' || goal.trim().length === 0) {
+        return res.status(400).json({ error: 'A clear collaborative goal is required to generate a roadmap.' });
       }
+
+      goal = goal.trim();
 
       console.log(`[AIController] Roadmap requested for user ${userId} and goal: "${goal}"`);
 

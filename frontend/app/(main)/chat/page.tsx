@@ -162,6 +162,22 @@ export default function ChatPage() {
             otherUserId: other?.id
           }
         })
+
+        const { data: unreadData } = await supabase
+          .from('messages')
+          .select('conversation_id')
+          .eq('is_read', false)
+          .neq('sender_id', user.id)
+          .in('conversation_id', mapped.map(c => c.id));
+
+        const unreadCounts = (unreadData || []).reduce((acc: any, curr) => {
+          acc[curr.conversation_id] = (acc[curr.conversation_id] || 0) + 1;
+          return acc;
+        }, {});
+
+        mapped.forEach(c => {
+          c.unread = unreadCounts[c.id] || 0;
+        });
         
         setConversations(mapped)
         
@@ -286,6 +302,7 @@ export default function ChatPage() {
     
     const markRead = async () => {
       await messageService.markAsRead(selectedConversation.id)
+      setConversations(prev => prev.map(c => c.id === selectedConversation.id ? { ...c, unread: 0 } : c))
     }
     markRead()
     
@@ -1137,17 +1154,17 @@ export default function ChatPage() {
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute bottom-full left-0 mb-6 w-64 bg-[var(--color-bg-secondary)]/95 backdrop-blur-2xl border border-[var(--color-border)] rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden z-30"
+                            className="absolute bottom-full left-0 mb-4 w-52 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden z-30"
                           >
-                            <div className="p-3 space-y-1">
+                            <div className="p-2 space-y-0.5">
                               <div className="relative w-full group">
-                                <button className="w-full flex items-center gap-4 p-4 hover:bg-[var(--color-bg-primary)] rounded-2xl transition-all text-[var(--color-text-primary)]">
-                                  <div className="p-2.5 bg-blue-500/10 text-blue-500 rounded-2xl group-hover:bg-blue-500 group-hover:text-white transition-all">
-                                    <ImageIcon size={18} />
+                                <button className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-bg-primary)] rounded-xl transition-all text-[var(--color-text-primary)]">
+                                  <div className="p-2 bg-blue-500/10 text-blue-500 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition-all">
+                                    <ImageIcon size={16} />
                                   </div>
                                   <div className="text-left">
-                                    <p className="text-sm font-bold text-[var(--color-text-primary)]">Photos</p>
-                                    <p className="text-[10px] text-[var(--color-text-secondary)] font-medium">Share images</p>
+                                    <p className="text-xs font-bold text-[var(--color-text-primary)]">Photos</p>
+                                    <p className="text-[9px] text-[var(--color-text-secondary)] font-medium">Share images</p>
                                   </div>
                                 </button>
                                 <input 
@@ -1167,14 +1184,14 @@ export default function ChatPage() {
                                   handleSendLocation()
                                 }}
                                 disabled={isSendingLocation}
-                                className="w-full flex items-center gap-4 p-4 hover:bg-[var(--color-bg-primary)] rounded-2xl transition-all group disabled:opacity-50 text-[var(--color-text-primary)]"
+                                className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-bg-primary)] rounded-xl transition-all group disabled:opacity-50 text-[var(--color-text-primary)]"
                               >
-                                <div className="p-2.5 bg-emerald-500/10 text-emerald-500 rounded-2xl group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                                  {isSendingLocation ? <Loader2 size={18} className="animate-spin" /> : <MapPin size={18} />}
+                                <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-xl group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                                  {isSendingLocation ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} />}
                                 </div>
                                 <div className="text-left">
-                                  <p className="text-sm font-bold text-[var(--color-text-primary)]">Current location</p>
-                                  <p className="text-[10px] text-[var(--color-text-secondary)] font-medium">Share GPS coords</p>
+                                  <p className="text-xs font-bold text-[var(--color-text-primary)]">Current location</p>
+                                  <p className="text-[9px] text-[var(--color-text-secondary)] font-medium">Share GPS coords</p>
                                 </div>
                               </button>
 
@@ -1185,14 +1202,14 @@ export default function ChatPage() {
                                   setShowPlusMenu(false)
                                   setShowLocationSearch(true)
                                 }}
-                                className="w-full flex items-center gap-4 p-4 hover:bg-[var(--color-bg-primary)] rounded-2xl transition-all group text-[var(--color-text-primary)]"
+                                className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-bg-primary)] rounded-xl transition-all group text-[var(--color-text-primary)]"
                               >
-                                <div className="p-2.5 bg-purple-500/10 text-purple-500 rounded-2xl group-hover:bg-purple-500 group-hover:text-white transition-all">
-                                  <Search size={18} />
+                                <div className="p-2 bg-purple-500/10 text-purple-500 rounded-xl group-hover:bg-purple-500 group-hover:text-white transition-all">
+                                  <Search size={16} />
                                 </div>
                                 <div className="text-left">
-                                  <p className="text-sm font-bold text-[var(--color-text-primary)]">Search location</p>
-                                  <p className="text-[10px] text-[var(--color-text-secondary)] font-medium">Find any place</p>
+                                  <p className="text-xs font-bold text-[var(--color-text-primary)]">Search location</p>
+                                  <p className="text-[9px] text-[var(--color-text-secondary)] font-medium">Find any place</p>
                                 </div>
                               </button>
 
@@ -1203,14 +1220,14 @@ export default function ChatPage() {
                                   setShowPlusMenu(false)
                                   setShowMeetingModal(true)
                                 }}
-                                className="w-full flex items-center gap-4 p-4 hover:bg-[var(--color-bg-primary)] rounded-2xl transition-all group text-[var(--color-text-primary)]"
+                                className="w-full flex items-center gap-3 p-3 hover:bg-[var(--color-bg-primary)] rounded-xl transition-all group text-[var(--color-text-primary)]"
                               >
-                                <div className="p-2.5 bg-orange-500/10 text-orange-500 rounded-2xl group-hover:bg-orange-500 group-hover:text-white transition-all">
-                                  <Calendar size={18} />
+                                <div className="p-2 bg-orange-500/10 text-orange-500 rounded-xl group-hover:bg-orange-500 group-hover:text-white transition-all">
+                                  <Calendar size={16} />
                                 </div>
                                 <div className="text-left">
-                                  <p className="text-sm font-bold text-[var(--color-text-primary)]">Schedule meeting</p>
-                                  <p className="text-[10px] text-[var(--color-text-secondary)] font-medium">Set a collab time</p>
+                                  <p className="text-xs font-bold text-[var(--color-text-primary)]">Schedule meeting</p>
+                                  <p className="text-[9px] text-[var(--color-text-secondary)] font-medium">Set a collab time</p>
                                 </div>
                               </button>
                             </div>

@@ -11,11 +11,42 @@ interface LegalModalProps {
 }
 
 const sections = [
-  { id: 'data', title: 'Data & Intent', icon: Eye, content: 'At Collixa, we prioritize transparency. We collect information related to your professional identity, project intents, and collaboration history primarily to power our alignment engine. This data helps us match you with the most compatible partners for your specific execution needs.' },
-  { id: 'ip', title: 'Intellectuals', icon: Shield, content: 'Your projects remain yours. While Collixa provides the ecosystem for connection and momentum, we do not claim ownership over any original ideas, project blueprints, or intellectual assets shared within your private intents unless explicitly stated in a specific partnership agreement.' },
-  { id: 'trust', title: 'Trust & Safety', icon: Lock, content: 'Collaboration is built on trust. Our platform utilizes validated skills and peer-reviewed momentum scores to ensure a safe environment for high-stakes building. We reserve the right to remove accounts that violate our community standards or jeopardize the momentum of others.' },
-  { id: 'privacy', title: 'Privacy Guarantee', icon: FileText, content: 'We do not sell your personal data to third parties. Our business model is centered on the success of your project alignment, not the monetization of your private correspondence. Communications within the Collixa platform are secured to protect your strategic advantages.' },
-  { id: 'terms', title: 'Modifications', icon: Scale, content: 'Collixa is an evolving ecosystem. We may update these terms as our platform introduces new collaboration tools and trust mechanisms. Continued use of the platform after updates constitutes acceptance of the refined momentum protocols.' },
+  { 
+    id: 'data', 
+    title: 'Data & Intent', 
+    icon: Eye, 
+    content: 'At Collixa, we prioritize transparency as a cornerstone of our ecosystem. We collect information related to your professional identity, project intents, and collaboration history primarily to power our proprietary alignment engine. This data helps us match you with the most compatible partners for your specific execution needs, ensuring that every connection made on the platform is rooted in shared purpose. By utilizing our services, you acknowledge that your professional interactions and public project markers are processed to optimize the momentum of the entire community. We implement industry-leading encryption and decentralized storage protocols to ensure that your strategic data remains confidential and accessible only to authorized participants within your designated tribes.' 
+  },
+  { 
+    id: 'ip', 
+    title: 'Intellectuals', 
+    icon: Shield, 
+    content: 'Your projects remain yours. While Collixa provides the sophisticated ecosystem for connection and momentum, we do not claim ownership over any original ideas, project blueprints, or intellectual assets shared within your private intents. The platform acts as a catalyst for innovation, not a claimant of its results. All intellectual property rights—including copyrights, patents, and trade secrets—developed through interactions on the platform remain vested in the respective creators or as defined by specific partnership agreements entered into by users. Collixa strictly prohibits the unauthorized use or redistribution of any intellectual assets found within the marketplace, and we reserve the right to mediate disputes to maintain the integrity of our creative commons.' 
+  },
+  { 
+    id: 'trust', 
+    title: 'Trust & Safety', 
+    icon: Lock, 
+    content: 'Collaboration is built on trust, and trust is enforced through accountability. Our platform utilizes validated skills, peer-reviewed momentum scores, and real-time engagement monitoring to ensure a safe environment for high-stakes building. We maintain a zero-tolerance policy for fraudulent behavior, harassment, or any actions that undermine the psychological safety of our members. We reserve the right to suspend or remove accounts that violate our community standards or jeopardize the momentum of others. Users are encouraged to report any suspicious activity through our secure moderation channel. By participating in the Collixa network, you agree to uphold the highest standards of professional conduct and to contribute positively to the collective growth of our distributed workforce.' 
+  },
+  { 
+    id: 'privacy', 
+    title: 'Privacy Guarantee', 
+    icon: FileText, 
+    content: 'We do not sell your personal data to third parties. Our business model is centered on the success of your project alignment, not the monetization of your private correspondence. Communications within the Collixa platform are secured with end-to-end encryption protocols to protect your strategic advantages and competitive edge. We only share data with service providers who assist us in delivering the platform experience, and only under strict confidentiality agreements. Your privacy is not just a policy; it is a technical requirement for the success of the intent-driven economy we are building. You have the right to access, rectify, or request the deletion of your personal data at any time, in accordance with global data protection regulations and our commitment to user sovereignty.' 
+  },
+  { 
+    id: 'terms', 
+    title: 'Modifications', 
+    icon: Scale, 
+    content: 'Collixa is an evolving ecosystem, constantly adapting to the needs of the modern builder. We may update these terms periodically to reflect the introduction of new collaboration tools, trust mechanisms, and legal requirements. When significant changes occur, we will provide notice through the platform or via email. Continued use of the platform after such updates constitutes a binding acceptance of the refined momentum protocols and governance standards. We recommend that users review this Legal Center regularly to stay informed about their rights and responsibilities. Our goal is to maintain a fair, transparent, and high-velocity environment where every participant can thrive without legal ambiguity or friction.' 
+  },
+  { 
+    id: 'responsibilities', 
+    title: 'Responsibilities', 
+    icon: FileText, 
+    content: 'As a member of the Collixa ecosystem, you are responsible for maintaining the security of your account and the confidentiality of any collaborative data you access. Users must ensure that any project intents or skill listings they create are accurate, professional, and do not infringe upon the rights of others. You agree not to use the platform for any illegal activities, including but not limited to intellectual property theft, financial fraud, or the distribution of malicious software. Furthermore, users are expected to honor their commitments within tribes and sessions, as consistent execution is the primary driver of reputation and XP within our network. Failure to meet these responsibilities may result in a reduction of your momentum score or permanent exclusion from the platform.' 
+  },
 ]
 
 export default function LegalModal({ isOpen, onClose, onAccept }: LegalModalProps) {

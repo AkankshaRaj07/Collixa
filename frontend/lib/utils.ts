@@ -81,6 +81,17 @@ export const truncate = (str: string, length: number): string => {
   return str.length > length ? str.slice(0, length) + '...' : str
 }
 
+export const getLevelLabel = (level: number = 1): string => {
+  const labels: Record<number, string> = {
+    1: 'Nomad',
+    2: 'Architect',
+    3: 'Luminary',
+    4: 'Oracle',
+    5: 'Master'
+  }
+  return labels[level] || 'Nomad'
+}
+
 export const slugify = (str: string): string => {
   return str
     .toLowerCase()

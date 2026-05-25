@@ -1,6 +1,7 @@
 import { supabase, supabaseAdmin } from '../config/database.js';
 import { NotificationService } from '../services/NotificationService.js';
 import AchievementService from '../services/AchievementService.js';
+import CreditService from '../services/CreditService.js';
 
 const getClient = () => supabaseAdmin || supabase;
 
@@ -659,10 +660,25 @@ export class AdminController {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      // Process transactions to show REDEEM instead of SPEND for voucher exchanges
+      const processedTransactions = (transactions || []).map(tx => {
+        if (tx.type === 'SPEND' && tx.description) {
+          try {
+            const meta = typeof tx.description === 'string' ? JSON.parse(tx.description) : tx.description;
+            if (meta && meta.isRedemption) {
+              return { ...tx, type: 'REDEEM' };
+            }
+          } catch (e) {
+            // Ignore parsing errors
+          }
+        }
+        return tx;
+      });
 
       return res.status(200).json({
         success: true,
-        data: transactions || []
+        data: processedTransactions
       });
     } catch (error) {
       next(error);
@@ -675,55 +691,26 @@ export class AdminController {
   static async addCredits(req, res, next) {
     try {
       const { userId, amount, reason } = req.body;
-      const client = getClient();
+      
+      const transaction = await CreditService.addCredits(
+        userId, 
+        amount, 
+        'ADMIN_ADD', 
+        null, 
+        reason || 'Admin credit addition'
+      );
 
-      // Get current credits
-      const { data: user, error: fetchError } = await client
+      // Fetch the new balance to return to frontend
+      const { data: user } = await getClient()
         .from('users')
         .select('credits')
         .eq('id', userId)
         .single();
 
-      if (fetchError) throw fetchError;
-
-      const newCredits = (user.credits || 0) + amount;
-
-      // Update user credits
-      const { error: updateError } = await client
-        .from('users')
-        .update({ credits: newCredits })
-        .eq('id', userId);
-
-      if (updateError) throw updateError;
-
-      // Record transaction
-      const { error: transactionError } = await client
-        .from('credit_transactions')
-        .insert([{
-          user_id: userId,
-          amount: amount,
-          type: 'ADMIN_ADD',
-          description: reason || 'Admin credit addition'
-        }]);
-
-      if (transactionError) {
-        console.error('[AdminController] Credit transaction error:', transactionError);
-        throw new Error(`Failed to record transaction: ${transactionError.message}`);
-      }
-
-      // Send notification to user
-      await NotificationService.send(
-        userId,
-        'CREDIT_ADDED',
-        'Credits Added',
-        `Admin has added ${amount} credits to your account. Reason: ${reason || 'Bonus'}`,
-        '/profile'
-      );
-
       return res.status(200).json({
         success: true,
         message: `${amount} credits added successfully`,
-        data: { newBalance: newCredits }
+        data: { newBalance: user?.credits || 0 }
       });
     } catch (error) {
       next(error);
@@ -736,43 +723,15 @@ export class AdminController {
   static async deductCredits(req, res, next) {
     try {
       const { userId, amount, reason } = req.body;
-      const client = getClient();
+      
+      const transaction = await CreditService.deductCredits(
+        userId, 
+        amount, 
+        'ADMIN_DEDUCT', 
+        reason || 'Admin credit deduction'
+      );
 
-      // Get current credits
-      const { data: user, error: fetchError } = await client
-        .from('users')
-        .select('credits')
-        .eq('id', userId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      const newCredits = Math.max(0, (user.credits || 0) - amount);
-
-      // Update user credits
-      const { error: updateError } = await client
-        .from('users')
-        .update({ credits: newCredits })
-        .eq('id', userId);
-
-      if (updateError) throw updateError;
-
-      // Record transaction
-      const { error: transactionError } = await client
-        .from('credit_transactions')
-        .insert([{
-          user_id: userId,
-          amount: -amount,
-          type: 'ADMIN_DEDUCT',
-          description: reason || 'Admin credit deduction'
-        }]);
-
-      if (transactionError) {
-        console.error('[AdminController] Credit deduction transaction error:', transactionError);
-        throw new Error(`Failed to record transaction: ${transactionError.message}`);
-      }
-
-      // Send notification to user
+      // Send notification to user (CreditService.deductCredits only notifies for SPEND type)
       await NotificationService.send(
         userId,
         'CREDIT_DEDUCTED',
@@ -781,10 +740,17 @@ export class AdminController {
         '/profile'
       );
 
+      // Fetch the new balance to return to frontend
+      const { data: user } = await getClient()
+        .from('users')
+        .select('credits')
+        .eq('id', userId)
+        .single();
+
       return res.status(200).json({
         success: true,
         message: `${amount} credits deducted successfully`,
-        data: { newBalance: newCredits }
+        data: { newBalance: user?.credits || 0 }
       });
     } catch (error) {
       next(error);

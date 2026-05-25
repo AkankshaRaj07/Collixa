@@ -15,18 +15,23 @@ export class CreditService {
    * @param {number} amount - Amount of credits to add
    * @param {string} type - Transaction type (PURCHASE, EARN)
    * @param {string} sessionId - Optional UUID of a session if related to a collaboration
+   * @param {string} description - Optional description/reason
    * @returns {Promise<Object>} The updated transaction record
    */
-  static async addCredits(userId, amount, type, sessionId = null) {
+  static async addCredits(userId, amount, type, sessionId = null, description = null) {
     try {
+      const numAmount = Number(amount);
+      if (isNaN(numAmount)) throw new Error('Invalid amount provided to addCredits');
+
       // 1. Record the transaction (only include session_id if provided)
       const transactionData = {
         user_id: userId,
-        amount: parseInt(amount),
+        amount: numAmount,
         type: type,
         created_at: new Date().toISOString()
       };
       if (sessionId) transactionData.session_id = sessionId;
+      if (description) transactionData.description = description;
 
       const [transaction] = await CreditTransactionModel.createMany([transactionData]);
 
@@ -79,13 +84,16 @@ export class CreditService {
    */
   static async deductCredits(userId, amount, type, description = null) {
     try {
+      const numAmount = Number(amount);
+      if (isNaN(numAmount)) throw new Error('Invalid amount provided to deductCredits');
+
       // Use 'SPEND' if 'REDEMPTION' is passed to avoid database constraint violations
       const transactionType = type === 'REDEMPTION' ? 'SPEND' : type;
 
       // 1. Record the transaction (negative amount)
       const transactionData = {
         user_id: userId,
-        amount: -parseInt(amount),
+        amount: -numAmount,
         type: transactionType,
         created_at: new Date().toISOString()
       };
@@ -106,7 +114,11 @@ export class CreditService {
       if (fetchError) throw fetchError;
 
       // 3. Update user credits (ensure not negative)
-      const newBalance = Math.max(0, (user.credits || 0) - parseInt(amount));
+      const oldBalance = user.credits || 0;
+      const newBalance = Math.max(0, oldBalance - numAmount);
+      
+      console.log(`[CreditService] Deducting credits for user ${userId}. Old: ${oldBalance}, Deduct: ${numAmount}, New: ${newBalance}`);
+
       const { error: updateError } = await getClient()
         .from('users')
         .update({ credits: newBalance })

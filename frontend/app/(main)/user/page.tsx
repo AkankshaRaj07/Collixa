@@ -291,7 +291,7 @@ export default function UserViewPage() {
                       onClick={handleStartChat}
                       className="w-full py-5 bg-pink-500 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl shadow-xl shadow-pink-500/20 hover:bg-pink-600 hover:-translate-y-1 active:translate-y-0 transition-all flex items-center justify-center gap-3"
                     >
-                      <MessageCircle size={18} /> Send Transmission
+                      <MessageCircle size={18} /> Send Message
                     </button>
                     
                     <button

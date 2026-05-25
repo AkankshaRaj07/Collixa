@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Zap, ArrowRight, ArrowUpRight, TrendingUp, History, 
   CreditCard, Send, Sparkles, Clock, ChevronRight,
-  ShieldCheck, Loader2, Filter, Download, Award, Star, Compass, Layout, Flame, Eye, CheckCircle2, Shield, Gift
+  ShieldCheck, Loader2, Filter, Download, Award, Star, Compass, Layout, Flame, Eye, CheckCircle2, Shield, Gift, Ticket
 } from 'lucide-react'
 import { useAuth } from '@/app/context/AuthContext'
 import { creditService, storageService } from '@/lib/supabase'
@@ -60,6 +60,8 @@ export default function CreditsPage() {
   const [isLedgerOpen, setIsLedgerOpen] = useState(false)
   const [isInfoOpen, setIsInfoOpen] = useState(false)
   const [showTierComparison, setShowTierComparison] = useState(false)
+  const [redemptions, setRedemptions] = useState<any[]>([])
+  const [fetchingRedemptions, setFetchingRedemptions] = useState(true)
 
   const fetchTransactions = async () => {
     try {
@@ -72,8 +74,25 @@ export default function CreditsPage() {
     }
   }
 
+  const fetchRedemptions = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/credits/redemptions`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      })
+      const data = await response.json()
+      if (data.success) {
+        setRedemptions(data.data || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch redemptions:', err)
+    } finally {
+      setFetchingRedemptions(false)
+    }
+  }
+
   useEffect(() => {
     fetchTransactions()
+    fetchRedemptions()
   }, [])
 
   const handleActionSuccess = () => {
@@ -253,51 +272,81 @@ export default function CreditsPage() {
 
         {/* RIGHTSIDE: RANK ECOSYSTEM */}
         <div className="space-y-6">
-           <div className="bg-white rounded-[2.5rem] p-6 space-y-6 shadow-2xl border border-black/5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-accent)]/5 rounded-full blur-3xl pointer-events-none" />
+           <div className="bg-[var(--color-bg-secondary)] rounded-[2.5rem] p-8 space-y-8 shadow-2xl border border-[var(--color-border)] relative overflow-hidden group">
+              {/* Creative Background Elements */}
+              <div className="absolute -top-12 -right-12 w-48 h-48 bg-[var(--color-accent)]/10 rounded-full blur-3xl pointer-events-none group-hover:bg-[var(--color-accent)]/20 transition-all duration-1000" />
+              <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
               
-              <div className="flex items-center gap-4 relative z-10">
-                  <div className="w-12 h-12 bg-[#001233] text-white rounded-2xl flex items-center justify-center shadow-lg">
-                     <currentTier.icon size={24} />
+              <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-[var(--color-inverse-bg)] text-[var(--color-inverse-text)] rounded-2xl flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform duration-500">
+                         <Ticket size={28} />
+                      </div>
+                      <div>
+                         <h3 className="text-xl font-serif font-black text-[var(--color-text-primary)] tracking-tighter uppercase italic">Voucher Vault</h3>
+                         <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--color-accent)]">Your Digital Assets</p>
+                      </div>
                   </div>
-                  <div>
-                     <h3 className="text-xl font-serif font-black text-[#001233] tracking-tighter uppercase">{currentTier.name}</h3>
-                     <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--color-accent)]">Rank Status</p>
+                  <div className="flex -space-x-1">
+                     <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)] animate-pulse" />
+                     <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]/30 ml-1" />
                   </div>
               </div>
 
-              <div className="space-y-4 pt-2 relative z-10">
-                 <div className="flex justify-between items-end border-b border-black/5 pb-3">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-black/40">Transfer Fee</p>
-                    <p className="text-2xl font-serif font-black italic text-[#001233] leading-none">{currentTier.details.fee}</p>
-                 </div>
-                 
-                 <div className="space-y-3">
-                   <BenefitRow label="Purchase Bonus" value={`+${currentTier.details.bonus}%`} />
-                   <BenefitRow label="Free Intents" value={`${currentTier.details.intents}/mo`} />
-                   <BenefitRow label="Reputation Yield" value="Standard" />
-                 </div>
-
-                 <div className="pt-4">
-                    <div className="flex justify-between text-[8px] font-black uppercase tracking-widest text-black/20 mb-2">
-                       <span>Progress to {nextTier?.name || 'MAX'}</span>
-                       <span>{user.xp || 0} XP</span>
+              <div className="space-y-6 pt-2 relative z-10">
+                 {fetchingRedemptions ? (
+                    <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                       <div className="w-10 h-10 border-2 border-[var(--color-accent)]/20 border-t-[var(--color-accent)] rounded-full animate-spin" />
+                       <span className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] opacity-40">Decrypting Vault...</span>
                     </div>
-                    <div className="w-full h-1.5 bg-black/5 rounded-full overflow-hidden">
-                       <motion.div 
-                         initial={{ width: 0 }}
-                         animate={{ width: "45%" }} // Conceptual progress
-                         className="h-full bg-[var(--color-accent)]"
-                       />
+                 ) : redemptions.length > 0 ? (
+                    <div className="space-y-4">
+                       {redemptions.slice(0, 3).map((r, idx) => (
+                          <motion.div 
+                            key={r.id} 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                            className="relative bg-[var(--color-bg-primary)] p-5 rounded-[1.5rem] border border-[var(--color-border)] group/item cursor-pointer hover:border-[var(--color-accent)]/30 hover:shadow-lg transition-all"
+                            onClick={() => router.push('/credits/exchange')}
+                          >
+                             {/* Physical ticket punch hole look */}
+                             <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[var(--color-bg-secondary)] rounded-full border border-[var(--color-border)]" />
+                             <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[var(--color-bg-secondary)] rounded-full border border-[var(--color-border)]" />
+                             
+                             <div className="flex justify-between items-center">
+                                <div>
+                                   <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-primary)] group-hover/item:text-[var(--color-accent)] transition-colors">{r.provider}</p>
+                                   <div className="flex items-center gap-2 mt-1">
+                                      <code className="text-[11px] font-mono font-black text-[var(--color-text-secondary)] tracking-wider">
+                                         {r.voucher_code.slice(0, 4)}••••{r.voucher_code.slice(-4)}
+                                      </code>
+                                   </div>
+                                </div>
+                                <div className="text-right">
+                                   <p className="text-2xl font-serif font-black italic text-[var(--color-text-primary)] leading-none">{r.amount}</p>
+                                   <p className="text-[7px] font-black uppercase tracking-widest text-[var(--color-accent)] mt-1">CR Magnitude</p>
+                                </div>
+                             </div>
+                          </motion.div>
+                       ))}
                     </div>
-                 </div>
+                 ) : (
+                    <div className="py-12 bg-[var(--color-bg-primary)] rounded-[2rem] border border-dashed border-[var(--color-border)] flex flex-col items-center justify-center text-center px-6">
+                       <div className="w-16 h-16 bg-[var(--color-bg-secondary)] rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-[var(--color-border)]">
+                          <Gift size={32} className="text-[var(--color-accent)] opacity-40" />
+                       </div>
+                       <h4 className="text-xs font-serif font-black text-[var(--color-text-primary)] opacity-40 italic">Vault is Offline.</h4>
+                       <p className="text-[9px] font-medium text-[var(--color-text-secondary)] opacity-40 mt-1">Exchange credits to populate your asset repository.</p>
+                    </div>
+                 )}
               </div>
 
               <button 
-                onClick={() => setShowTierComparison(true)}
-                className="w-full py-4 bg-[var(--color-accent)] text-black text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-[#001233] hover:text-white transition-all shadow-xl shadow-[var(--color-accent)]/10"
+                onClick={() => router.push('/credits/exchange')}
+                className="w-full py-5 bg-[var(--color-inverse-bg)] text-[var(--color-inverse-text)] text-[10px] font-black uppercase tracking-[0.4em] rounded-2xl hover:bg-[var(--color-accent)] hover:text-black transition-all shadow-xl shadow-black/5 group-hover:shadow-[var(--color-accent)]/10 active:scale-95 flex items-center justify-center gap-3"
               >
-                Comparative Rankings
+                Access Marketplace <ArrowRight size={14} />
               </button>
            </div>
 
