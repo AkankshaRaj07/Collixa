@@ -37,9 +37,6 @@ export const config = {
   // SendGrid Configuration
   SENDGRID_API_KEY: cleanEnv(process.env.SENDGRID_API_KEY),
 
-  // Google OAuth
-  GOOGLE_CLIENT_ID: cleanEnv(process.env.GOOGLE_CLIENT_ID),
-  GOOGLE_CLIENT_SECRET: cleanEnv(process.env.GOOGLE_CLIENT_SECRET),
 
   // CORS
   FRONTEND_URL: cleanEnv(process.env.FRONTEND_URL) || 'http://localhost:3001',
