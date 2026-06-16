@@ -1,27 +1,28 @@
-# Collixa - Interview Preparation Kit
+# 🚀 Collixa - Complete Interview Preparation Kit
 
-Welcome to the Collixa Interview Preparation Kit! This guide is designed to help you prepare for technical interviews related to the Collixa platform.
+Welcome to your structured interview preparation kit. This documentation is designed to help you confidently speak about the Collixa platform, your architectural decisions, and your technical challenges in any Software Engineering interview.
 
-The kit is divided into detailed sections, each containing comprehensive questions and answers based on the Collixa technology stack.
+---
 
-## Table of Contents
+## 📚 Table of Contents
 
-Please navigate through the files below for detailed Q&A sessions on each topic:
+1. [Project Pitch & Behavioral Stories](./01-Project-Pitch-and-Behavioral.md)
+   *Your elevator pitch, biggest technical challenges, and STAR-method behavioral stories (Conflict, Leadership, Production Bugs, Failures).*
 
-1. [Architecture & System Design](./Architecture-and-System-Design.md)
-   *Core concepts, decoupling, and the Wealth Protocol.*
+2. [Architecture & Tech Stack](./02-Architecture-and-Tech-Stack.md)
+   *High-level reasoning for choosing Next.js, Express, Socket.io, PostgreSQL, and Gemini Flash over alternatives.*
 
-2. [Frontend Technologies](./Frontend-Technologies.md)
-   *React, Next.js 14 App Router, Tailwind CSS, and Framer Motion.*
+3. [Frontend, Backend, & AI Deep Dive](./03-Frontend-Backend-and-AI.md)
+   *Specific implementation details for React State, Next.js Server Components, Express Middleware, WebSockets, and Gemini Prompting.*
 
-3. [Backend & API](./Backend-and-API.md)
-   *Node.js, Express, Authentication, and Socket.io.*
+4. [Database & Security](./04-Database-and-Security.md)
+   *PostgreSQL Schema Design, UUIDs, Foreign Keys, JWT Authentication, and Socket.io Room Isolation.*
 
-4. [Database](./Database.md)
-   *PostgreSQL schema design, UUIDs, and Supabase features.*
+5. [Scalability & DevOps](./05-Scalability-and-DevOps.md)
+   *How to scale the MVP to handle millions of users: PostgreSQL Read Replicas, Redis Caching, Next.js ISR, CI/CD, and Monitoring.*
 
-5. [AI Integration](./AI-Integration.md)
-   *Using Google Gemini Flash AI, prompt engineering, and handling API failures.*
+6. [System Design Scenarios](./06-System-Design-Scenarios.md)
+   *Complex hypothetical system design questions regarding high concurrency, asynchronous workers, and network partitions.*
 
-6. [System Design & Scenario Questions](./Scenario-Questions.md)
-   *Deep dives into scaling, real-time sync, and transaction integrity.*
+7. [Comprehensive Mock Interview Script](./07-Comprehensive-Mock-Interview.md)
+   *An end-to-end conversational mock interview script showing you exactly how to weave all these concepts into natural interview answers.*

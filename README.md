@@ -27,7 +27,7 @@
 | **Intent Marketplace** | Post project visions, budgets, and timelines. | Next.js + Express |
 | **Tribe Architecture** | Form high-performance squads based on shared goals. | PostgreSQL + Express |
 | **AI Matching Engine** | Intelligent collaborator suggestions using Google Gemini. | Google Gemini Flash AI |
-| **Wealth Protocol** | Credit wallet, Voucher vault, and Secure Stripe payments. | Stripe API + PostgreSQL |
+| **Wealth Protocol** | Credit wallet, Voucher vault, and simulated payment workflows. | Internal API + PostgreSQL |
 | **Skill Hub** | Discovery and exchange of professional skills. | Lucide + Express |
 | **Real-time Hub** | Integrated chat, video meetings (Jitsi), and presence. | Socket.io + React + Jitsi |
 | **Admin Control Center**| Granular control over users, credits, and system health. | Next.js + Express |
@@ -132,7 +132,7 @@ Create `.env` files in both `frontend/` and `backend/` directories.
 | `JWT_SECRET` | Secure string for token generation |
 | `FRONTEND_URL` | Frontend URL (default: `http://localhost:3001`) |
 | `GEMINI_API_KEY` | Google AI Studio API Key |
-| `STRIPE_SECRET_KEY` | Stripe Payment Gateway Key |
+| `SIMULATION_KEY` | Simulated Payment Gateway Key |
 
 **Frontend (`frontend/.env.local`):**
 | Variable | Description |
